@@ -57,20 +57,11 @@ class SSHExecuteOperatorTest(unittest.TestCase):
         )
         task.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, force=True)
 
-    def test_ssh_conn_id(self):
-        task = SSHExecuteOperator(
-            task_id="test",
-            bash_command="echo airflow",
-            ssh_conn_id='ssh_default',
-            dag=self.dag,
-        )
-        task.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, force=True)
-
     def test_ssh_xcom(self):
         task = SSHExecuteOperator(
             task_id="test",
             bash_command="echo airflow",
-            ssh_conn_id='ssh_default',
+            ssh_hook=self.hook,
             xcom_push=True,
             dag=self.dag,
         )

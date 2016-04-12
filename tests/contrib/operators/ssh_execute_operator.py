@@ -40,7 +40,7 @@ class SSHExecuteOperatorTest(unittest.TestCase):
 
     def test_simple(self):
         task = SSHExecuteOperator(
-            task_id="test_simple",
+            task_id="test",
             bash_command="echo airflow",
             ssh_hook=self.hook,
             dag=self.dag,
@@ -49,7 +49,7 @@ class SSHExecuteOperatorTest(unittest.TestCase):
 
     def test_with_env(self):
         task = SSHExecuteOperator(
-            task_id="test_with_env",
+            task_id="test",
             bash_command="echo $AIRFLOW_HOME",
             ssh_hook=self.hook,
             env={"AIRFLOW_test": "test"},
@@ -59,7 +59,7 @@ class SSHExecuteOperatorTest(unittest.TestCase):
 
     def test_ssh_conn_id(self):
         task = SSHExecuteOperator(
-            task_id="test_ssh_conn_id",
+            task_id="test",
             bash_command="echo airflow",
             ssh_conn_id='ssh_default',
             dag=self.dag,
@@ -68,7 +68,7 @@ class SSHExecuteOperatorTest(unittest.TestCase):
 
     def test_ssh_xcom(self):
         task = SSHExecuteOperator(
-            task_id="test_ssh_xcom",
+            task_id="test",
             bash_command="echo airflow",
             ssh_conn_id='ssh_default',
             xcom_push=True,

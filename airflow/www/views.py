@@ -1806,7 +1806,12 @@ class HomeView(AdminIndexView):
                 ~DM.is_subdag, DM.is_active
             ).all()
 
-        orm_dags = {dag.dag_id: dag for dag in qry_fltr}
+        # optionally filter out "paused" dags
+        if request.args.get('showPaused') == 'True':
+            orm_dags = {dag.dag_id: dag for dag in qry_fltr}
+
+        else:
+            orm_dags = {dag.dag_id: dag for dag in qry_fltr if not dag.is_paused}
 
         import_errors = session.query(models.ImportError).all()
         for ie in import_errors:
@@ -1818,7 +1823,12 @@ class HomeView(AdminIndexView):
         session.close()
 
         # get a list of all non-subdag dags visible to everyone
-        unfiltered_webserver_dags = [dag for dag in dagbag.dags.values() if not dag.parent_dag]
+        # optionally filter out "paused" dags
+        if request.args.get('showPaused') == 'True':
+            unfiltered_webserver_dags = [dag for dag in dagbag.dags.values() if not dag.parent_dag]
+
+        else:
+            unfiltered_webserver_dags = [dag for dag in dagbag.dags.values() if not dag.parent_dag and not dag.is_paused]
 
         # optionally filter to get only dags that the user should see
         if do_filter and owner_mode == 'ldapgroup':
@@ -1842,6 +1852,7 @@ class HomeView(AdminIndexView):
             }
 
         all_dag_ids = sorted(set(orm_dags.keys()) | set(webserver_dags.keys()))
+
         return self.render(
             'airflow/dags.html',
             webserver_dags=webserver_dags,

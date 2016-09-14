@@ -162,6 +162,11 @@
         {% endfor %}
         </tbody>
     </table>
+    {% if request.args.get("showPaused") == "True" %}
+    <a href="/admin/">Hide Paused DAGs</a>
+    {% else %}
+    <a href="/admin/?showPaused=True">Show Paused DAGs</a>
+    {% endif %}
   </div>
 {% endblock %}
 
@@ -184,10 +189,11 @@
           $.ajax(url);
         });
       });
-      $('#dags').dataTable({
+      var dt = $('#dags').dataTable({
         "iDisplayLength": 500,
         "bSort": false,
       });
+//      debugger;
       $("#main_content").show(250);
       diameter = 25;
       circle_margin = 4;

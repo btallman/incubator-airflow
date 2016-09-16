@@ -61,7 +61,7 @@ from airflow import models
 from airflow import settings
 from airflow.exceptions import AirflowException
 from airflow.settings import Session
-from airflow.models import XCom
+from airflow.models import XCom, DagRun
 from airflow.ti_deps.dep_context import DepContext, QUEUE_DEPS, SCHEDULER_DEPS
 
 from airflow.models import BaseOperator
@@ -961,6 +961,43 @@ class Airflow(BaseView):
         flash(
             "Sent {} to the message queue, "
             "it should start any moment now.".format(ti))
+        return redirect(origin)
+
+
+    @expose('/trigger')
+    @login_required
+    @wwwutils.action_logging
+    @wwwutils.notify_owner
+    def trigger(self):
+        dag_id = request.args.get('dag_id')
+        origin = request.args.get('origin') or "/admin/"
+        dag = dagbag.get_dag(dag_id)
+
+        if not dag:
+            flash("Cannot find dag {}".format(dag_id))
+            return redirect(origin)
+
+        execution_date = datetime.now()
+        run_id = "manual__{0}".format(execution_date.isoformat())
+
+        dr = DagRun.find(dag_id=dag_id, run_id=run_id)
+        if dr:
+            flash("This run_id {} already exists".format(run_id))
+            return redirect(origin)
+
+        run_conf = {}
+
+        trigger = dag.create_dagrun(
+            run_id=run_id,
+            execution_date=execution_date,
+            state=State.RUNNING,
+            conf=run_conf,
+            external_trigger=True
+        )
+
+        flash(
+            "Triggered {}, "
+            "it should start any moment now.".format(dr))
         return redirect(origin)
 
     @expose('/clear')

@@ -111,6 +111,11 @@
                 <td class="text-center" style="display:flex; flex-direction:row; justify-content:space-around;">
                 {% if dag %}
 
+                <!-- Trigger Dag -->
+                <a href="{{ url_for('airflow.trigger', dag_id=dag.dag_id) }}" title="Trigger Dag">
+                    <span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span>
+                </a>
+
                 <!-- Tree -->
                 <a href="{{ url_for('airflow.tree', dag_id=dag.dag_id, num_runs=25) }}" title="Tree View">
                     <span class="glyphicon glyphicon-tree-deciduous" aria-hidden="true"></span>

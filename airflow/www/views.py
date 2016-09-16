@@ -997,7 +997,7 @@ class Airflow(BaseView):
 
         flash(
             "Triggered {}, "
-            "it should start any moment now.".format(dr))
+            "it should start any moment now.".format(dag_id))
         return redirect(origin)
 
     @expose('/clear')

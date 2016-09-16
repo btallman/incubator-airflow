@@ -206,11 +206,10 @@
           $.ajax(url);
         });
       });
-      var dt = $('#dags').dataTable({
+      $('#dags').dataTable({
         "iDisplayLength": 500,
         "bSort": false,
       });
-//      debugger;
       $("#main_content").show(250);
       diameter = 25;
       circle_margin = 4;

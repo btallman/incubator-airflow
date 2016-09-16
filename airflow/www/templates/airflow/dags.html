@@ -106,11 +106,13 @@
                 </td>
 
                 <!-- Column 7: Last Run -->
-                <td style="padding:0px; width:120px; height:10px;">
+                <td>
                     {% if dag %}
                         {% set last_run = dag.get_last_dagrun(include_externally_triggered=True) %}
                         {% if last_run %}
-                            {{ last_run.start_date.strftime("%Y-%m-%d %H:%M") }}
+                            <a href="{{ url_for('airflow.graph', dag_id=last_run.dag_id, execution_date=last_run.execution_date ) }}">
+                                {{ last_run.start_date.strftime("%Y-%m-%d %H:%M") }}
+                            </a>
                         {% else %}
                             <!--No DAG Runs-->
                         {% endif %}

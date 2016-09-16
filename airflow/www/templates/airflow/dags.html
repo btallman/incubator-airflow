@@ -112,10 +112,10 @@
                         {% if last_run %}
                             {{ last_run.start_date.strftime("%Y-%m-%d %H:%M") }}
                         {% else %}
-                            No LastRun
+                            <!--No DAG Runs-->
                         {% endif %}
                     {% else %}
-                        No DAG
+                        <!--No DAG Runs-->
                     {% endif %}
                 </td>
 

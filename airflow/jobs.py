@@ -1285,6 +1285,24 @@ class SchedulerJob(BaseJob):
                         child.kill()
                         child.wait()
 
+    def _continue(self, execute_start_time):
+        """
+        :param duration: how long (in seconds) to run the scheduler (-1 = forever)
+        :type duration: int
+        :param execute_start_time: when was the scheduler started
+        :type execute_start_time: datetime
+        :returns bool
+        """
+        if self.run_duration > 0:
+            if (datetime.now() - execute_start_time).total_seconds() < \
+                self.run_duration:
+                return True
+            else:
+                return False
+        
+        else:
+            return True
+
     def _execute_helper(self, processor_manager):
         """
         :param processor_manager: manager to use
@@ -1323,8 +1341,7 @@ class SchedulerJob(BaseJob):
         known_file_paths = processor_manager.file_paths
 
         # For the execute duration, parse and schedule DAGs
-        while (datetime.now() - execute_start_time).total_seconds() < \
-                self.run_duration:
+        while self._continue(execute_start_time):
             self.logger.debug("Starting Loop...")
             loop_start_time = time.time()
 

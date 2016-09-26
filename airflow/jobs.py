@@ -1287,13 +1287,12 @@ class SchedulerJob(BaseJob):
 
     def _continue(self, execute_start_time):
         """
-        :param duration: how long (in seconds) to run the scheduler (-1 = forever)
-        :type duration: int
         :param execute_start_time: when was the scheduler started
         :type execute_start_time: datetime
         :returns bool
         """
         if self.run_duration > 0:
+            # If run_duration is greater than 0, then number of seconds
             if (datetime.now() - execute_start_time).total_seconds() < \
                 self.run_duration:
                 return True
@@ -1301,6 +1300,7 @@ class SchedulerJob(BaseJob):
                 return False
         
         else:
+            # If run_duration is less than 0, then unlimited
             return True
 
     def _execute_helper(self, processor_manager):

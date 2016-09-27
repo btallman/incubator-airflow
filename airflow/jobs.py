@@ -689,14 +689,16 @@ class SchedulerJob(BaseJob):
             if len(active_runs) >= dag.max_active_runs and not dag.dagrun_timeout:
                 return
             timedout_runs = 0
+            # check active runs for timeout and time them out
             for dr in active_runs:
                 if (
                         dr.start_date and dag.dagrun_timeout and
-                        dr.start_date < datetime.now() - dag.dagrun_timeout):
+                        dr.start_date < datetime.now() - dag.dagrun_timeout):                    
                     dr.state = State.FAILED
                     dr.end_date = datetime.now()
                     timedout_runs += 1
             session.commit()
+            # return if still above maximum active runs and not timed out
             if len(active_runs) - timedout_runs >= dag.max_active_runs:
                 return
 
@@ -705,7 +707,6 @@ class SchedulerJob(BaseJob):
                 session.query(func.max(DagRun.execution_date))
                 .filter_by(dag_id=dag.dag_id)
                 .filter(or_(
-                    DagRun.external_trigger == False,
                     # add % as a wildcard for the like query
                     DagRun.run_id.like(DagRun.ID_PREFIX+'%')
                 ))

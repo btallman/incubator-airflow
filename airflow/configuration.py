@@ -441,6 +441,7 @@ job_heartbeat_sec = 1
 scheduler_heartbeat_sec = 5
 authenticate = true
 max_threads = 2
+backfill_by_default = true
 """
 
 

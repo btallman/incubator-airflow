@@ -717,6 +717,13 @@ class SchedulerJob(BaseJob):
             if dag.schedule_interval == '@once' and last_scheduled_run:
                 return None
 
+            # if not dag.backfill then NO Backfill! So, start_date can't be
+            #   before now!
+            if not dag.backfill:
+                self.logging.info('Backfill: {}.backfill = False, changing start_date to datetime.now()'.format(dag.dag_id))
+                if dag.start_date < datetime.now():
+                    dag.start_date = datetime.now()
+
             next_run_date = None
             if not last_scheduled_run:
                 # First run

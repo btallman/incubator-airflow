@@ -321,6 +321,8 @@ min_file_process_interval = 180
 
 child_process_log_directory = /tmp/airflow/scheduler/logs
 
+backfill_by_default = true
+
 # Statsd (https://github.com/etsy/statsd) integration settings
 statsd_on = False
 statsd_host = localhost

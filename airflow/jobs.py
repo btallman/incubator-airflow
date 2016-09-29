@@ -679,6 +679,7 @@ class SchedulerJob(BaseJob):
         for a DAG based on scheduling interval
         Returns DagRun if one is scheduled. Otherwise returns None.
         """
+        self.logging.info('Creating DagRuns for {}'.format(dag.dag_id))
         if dag.schedule_interval:
             active_runs = DagRun.find(
                 dag_id=dag.dag_id,
@@ -723,6 +724,9 @@ class SchedulerJob(BaseJob):
                 self.logging.info('Backfill: {}.backfill = False, changing start_date to datetime.now()'.format(dag.dag_id))
                 if dag.start_date < datetime.now():
                     dag.start_date = datetime.now()
+            
+            else:
+                self.logging.info('Backfill: {}.backfill = True, not changing start_date to datetime.now()'.format(dag.dag_id))
 
             next_run_date = None
             if not last_scheduled_run:

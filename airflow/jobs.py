@@ -1082,8 +1082,11 @@ class SchedulerJob(BaseJob):
         :type tis_out: multiprocessing.Queue[TaskInstance]
         :return: None
         """
+        self.logger.info('Processing Dags')
         for dag in dags:
             dag = dagbag.get_dag(dag.dag_id)
+            self.logger.info('Examining Dag {}'.format(dag.dag_id))
+
             if dag.reached_max_runs:
                 self.logger.info("Not processing DAG {} since its max runs has been reached"
                                 .format(dag.dag_id))

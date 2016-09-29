@@ -41,6 +41,9 @@
                   <span id="statuses_info" class="glyphicon glyphicon-info-sign" aria-hidden="true" title="Status of tasks from all active DAG runs or, if not currently active, from most recent run."></span>
                   <img id="loading" width="15" src="{{ url_for("static", filename="loading.gif") }}">
                 </th>
+                <th style="padding-left: 5px;">Last Run
+                  <span id="statuses_info" class="glyphicon glyphicon-info-sign" aria-hidden="true" title="Date/Time of Last Dag Run."></span>
+                </th>
                 <th style="padding-left: 5px;">DAG Runs
                   <span id="statuses_info" class="glyphicon glyphicon-info-sign" aria-hidden="true" title="Status of all previous DAG runs."></span>
                   <img id="loading" width="15" src="{{ url_for("static", filename="loading.gif") }}">
@@ -102,14 +105,35 @@
                     <svg height="10" width="10" id='task-run-{{ dag.safe_dag_id }}' style="display: block;"></svg>
                 </td>
 
-                <!-- Column 7: Dag Runs -->
+                <!-- Column 7: Last Run -->
+                <td>
+                    {% if dag %}
+                        {% set last_run = dag.get_last_dagrun(include_externally_triggered=True) %}
+                        {% if last_run %}
+                            <a href="{{ url_for('airflow.graph', dag_id=last_run.dag_id, execution_date=last_run.execution_date ) }}">
+                                {{ last_run.start_date.strftime("%Y-%m-%d %H:%M") }}
+                            </a>
+                        {% else %}
+                            <!--No DAG Runs-->
+                        {% endif %}
+                    {% else %}
+                        <!--No DAG Runs-->
+                    {% endif %}
+                </td>
+
+                <!-- Column 8: Dag Runs -->
                 <td style="padding:0px; width:120px; height:10px;">
                     <svg height="10" width="10" id='dag-run-{{ dag.safe_dag_id }}' style="display: block;"></svg>
                 </td>
 
-                <!-- Column 8: Links -->
+                <!-- Column 9: Links -->
                 <td class="text-center" style="display:flex; flex-direction:row; justify-content:space-around;">
                 {% if dag %}
+
+                <!-- Trigger Dag -->
+                <a href="{{ url_for('airflow.trigger', dag_id=dag.dag_id) }}" title="Trigger Dag">
+                    <span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span>
+                </a>
 
                 <!-- Tree -->
                 <a href="{{ url_for('airflow.tree', dag_id=dag.dag_id, num_runs=25) }}" title="Tree View">
@@ -189,11 +213,10 @@
           $.ajax(url);
         });
       });
-      var dt = $('#dags').dataTable({
+      $('#dags').dataTable({
         "iDisplayLength": 500,
         "bSort": false,
       });
-//      debugger;
       $("#main_content").show(250);
       diameter = 25;
       circle_margin = 4;

@@ -1268,6 +1268,8 @@ class TaskInstance(Base):
                     self.xcom_push(key=XCOM_RETURN_KEY, value=result)
 
                 task_copy.post_execute(context=context)
+                Stats.incr('operator_successes_{}'.format(
+                    self.task.__class__.__name__), 1, 1)
             self.state = State.SUCCESS
         except AirflowSkipException:
             self.state = State.SKIPPED
@@ -1307,6 +1309,7 @@ class TaskInstance(Base):
         session = settings.Session()
         self.end_date = datetime.now()
         self.set_duration()
+        Stats.incr('operator_failures_{}'.format(task.__class__.__name__), 1, 1)
         if not test_mode:
             session.add(Log(State.FAILED, self))
 
@@ -2794,15 +2797,6 @@ class DAG(BaseDag, LoggingMixin):
                 l.append(task.subdag)
                 l += task.subdag.subdags
         return l
-
-    @property
-    def reached_max_runs(self):
-        active_runs = DagRun.find(
-            dag_id=self.dag_id,
-            state=State.RUNNING,
-            external_trigger=False
-        )
-        return len(active_runs) >= self.max_active_runs
 
     def resolve_template_files(self):
         for t in self.tasks:

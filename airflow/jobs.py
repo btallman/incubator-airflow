@@ -156,6 +156,9 @@ class BaseJob(Base, LoggingMixin):
         '''
         session = settings.Session()
         job = session.query(BaseJob).filter_by(id=self.id).one()
+        make_transient(job)
+        session.commit()
+        session.close()
 
         if job.state == State.SHUTDOWN:
             self.kill()
@@ -168,6 +171,7 @@ class BaseJob(Base, LoggingMixin):
 
         job.latest_heartbeat = datetime.now()
 
+        session = settings.Session()
         session.merge(job)
         session.commit()
 
@@ -679,27 +683,25 @@ class SchedulerJob(BaseJob):
         for a DAG based on scheduling interval
         Returns DagRun if one is scheduled. Otherwise returns None.
         """
-        self.logger.info('Creating DagRuns for {}'.format(dag.dag_id))
         if dag.schedule_interval:
             active_runs = DagRun.find(
                 dag_id=dag.dag_id,
                 state=State.RUNNING,
+                external_trigger=False,
                 session=session
             )
             # return if already reached maximum active runs and no timeout setting
             if len(active_runs) >= dag.max_active_runs and not dag.dagrun_timeout:
                 return
             timedout_runs = 0
-            # check active runs for timeout and time them out
             for dr in active_runs:
                 if (
                         dr.start_date and dag.dagrun_timeout and
-                        dr.start_date < datetime.now() - dag.dagrun_timeout):                    
+                        dr.start_date < datetime.now() - dag.dagrun_timeout):
                     dr.state = State.FAILED
                     dr.end_date = datetime.now()
                     timedout_runs += 1
             session.commit()
-            # return if still above maximum active runs and not timed out
             if len(active_runs) - timedout_runs >= dag.max_active_runs:
                 return
 
@@ -708,6 +710,7 @@ class SchedulerJob(BaseJob):
                 session.query(func.max(DagRun.execution_date))
                 .filter_by(dag_id=dag.dag_id)
                 .filter(or_(
+                    DagRun.external_trigger == False,
                     # add % as a wildcard for the like query
                     DagRun.run_id.like(DagRun.ID_PREFIX+'%')
                 ))
@@ -717,16 +720,6 @@ class SchedulerJob(BaseJob):
             # don't schedule @once again
             if dag.schedule_interval == '@once' and last_scheduled_run:
                 return None
-
-            # if not dag.backfill then NO Backfill! So, start_date can't be
-            #   before now!
-            if not dag.backfill:
-                self.logger.info('Backfill: {}.backfill = False, changing start_date to datetime.now()'.format(dag.dag_id))
-                if dag.start_date < datetime.now():
-                    dag.start_date = datetime.now()
-            
-            else:
-                self.logger.info('Backfill: {}.backfill = True, not changing start_date to datetime.now()'.format(dag.dag_id))
 
             next_run_date = None
             if not last_scheduled_run:
@@ -1082,15 +1075,8 @@ class SchedulerJob(BaseJob):
         :type tis_out: multiprocessing.Queue[TaskInstance]
         :return: None
         """
-        self.logger.info('Processing Dags')
         for dag in dags:
             dag = dagbag.get_dag(dag.dag_id)
-            self.logger.info('Examining Dag {}'.format(dag.dag_id))
-
-            if dag.reached_max_runs:
-                self.logger.info("Not processing DAG {} since its max runs has been reached"
-                                .format(dag.dag_id))
-                continue
             if dag.is_paused:
                 self.logger.info("Not processing DAG {} since it's paused"
                                  .format(dag.dag_id))
@@ -1299,24 +1285,6 @@ class SchedulerJob(BaseJob):
                         child.kill()
                         child.wait()
 
-    def _continue(self, execute_start_time):
-        """
-        :param duration: how long (in seconds) to run the scheduler (-1 = forever)
-        :type duration: int
-        :param execute_start_time: when was the scheduler started
-        :type execute_start_time: datetime
-        :returns bool
-        """
-        if self.run_duration > 0:
-            if (datetime.now() - execute_start_time).total_seconds() < \
-                self.run_duration:
-                return True
-            else:
-                return False
-        
-        else:
-            return True
-
     def _execute_helper(self, processor_manager):
         """
         :param processor_manager: manager to use
@@ -1355,7 +1323,8 @@ class SchedulerJob(BaseJob):
         known_file_paths = processor_manager.file_paths
 
         # For the execute duration, parse and schedule DAGs
-        while self._continue(execute_start_time):
+        while (datetime.now() - execute_start_time).total_seconds() < \
+                self.run_duration:
             self.logger.debug("Starting Loop...")
             loop_start_time = time.time()
 

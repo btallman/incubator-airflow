@@ -197,6 +197,11 @@ web_server_host = 0.0.0.0
 # The port on which to run the web server
 web_server_port = 8080
 
+# Paths to the SSL certificate and key for the web server. When both are
+# provided SSL will be enabled. This does not change the web server port.
+web_server_ssl_cert =
+web_server_ssl_key =
+
 # Number of seconds the gunicorn webserver waits before timing out on a worker
 web_server_worker_timeout = 120
 
@@ -399,6 +404,7 @@ TEST_CONFIG = """\
 unit_test_mode = True
 airflow_home = {AIRFLOW_HOME}
 dags_folder = {TEST_DAGS_FOLDER}
+plugins_folder = {TEST_PLUGINS_FOLDER}
 base_log_folder = {AIRFLOW_HOME}/logs
 executor = SequentialExecutor
 sql_alchemy_conn = sqlite:///{AIRFLOW_HOME}/unittests.db
@@ -680,6 +686,16 @@ if os.path.exists(_TEST_DAGS_FOLDER):
     TEST_DAGS_FOLDER = _TEST_DAGS_FOLDER
 else:
     TEST_DAGS_FOLDER = os.path.join(AIRFLOW_HOME, 'dags')
+
+# Set up plugins folder for unit tests
+_TEST_PLUGINS_FOLDER = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+    'tests',
+    'plugins')
+if os.path.exists(_TEST_PLUGINS_FOLDER):
+    TEST_PLUGINS_FOLDER = _TEST_PLUGINS_FOLDER
+else:
+    TEST_PLUGINS_FOLDER = os.path.join(AIRFLOW_HOME, 'plugins')
 
 
 def parameterized_config(template):

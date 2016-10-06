@@ -20,7 +20,7 @@ from __future__ import unicode_literals
 from past.builtins import basestring
 from collections import defaultdict, Counter
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import getpass
 import logging
@@ -721,6 +721,10 @@ class SchedulerJob(BaseJob):
             if dag.schedule_interval == '@once' and last_scheduled_run:
                 return None
 
+            # don't do backfill for dag's that don't have dag.backfill = True
+            if not dag.backfill:
+                dag.start_date = datetime.now() - timedelta(minutes=1)
+
             next_run_date = None
             if not last_scheduled_run:
                 # First run
@@ -747,6 +751,10 @@ class SchedulerJob(BaseJob):
 
                 self.logger.debug("Dag start date: {}. Next run date: {}"
                                   .format(dag.start_date, next_run_date))
+
+            # don't ever schedule in the future
+            if next_run_date > datetime.now():
+                return
 
             # this structure is necessary to avoid a TypeError from concatenating
             # NoneType

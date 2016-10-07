@@ -903,14 +903,9 @@ class SchedulerJobTest(unittest.TestCase):
         dag = DAG(DAG_NAME,
                   schedule_interval='* * * * *',
                   max_active_runs=1,
+                  backfill=False,
                   default_args=default_args
                   )
-
-        # Put it back just because
-        configuration.set('scheduler', 'backfill_by_default', 'true')
-
-        # Correct default?
-        self.assertEqual(dag.backfill, default_backfill)
 
         run_this_1 = DummyOperator(task_id='run_this_1', dag=dag)
         run_this_2 = DummyOperator(task_id='run_this_2', dag=dag)

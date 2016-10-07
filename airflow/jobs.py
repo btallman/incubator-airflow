@@ -723,7 +723,14 @@ class SchedulerJob(BaseJob):
 
             # don't do backfill for dag's that don't have dag.backfill = True
             if not dag.backfill:
-                dag.start_date = datetime.now() - timedelta(minutes=1)
+                # The logic is that we move start_date up until one period before, so that datetime.now()
+                # is AFTER the period end, and the job can be created...
+                new_start = dag.previous_schedule(datetime.now())
+                if dag.start_date:
+                    if new_start >= dag.start_date:
+                        dag.start_date = new_start
+                else:
+                    dag.start_date = new_start
 
             next_run_date = None
             if not last_scheduled_run:

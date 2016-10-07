@@ -23,15 +23,19 @@ DAG_NAME = 'test_dag_v1'
 
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': True,
-    'start_date': START_DATE,
+    'depends_on_past': False,
+    'start_date': START_DATE
+    
 }
-dag = DAG(DAG_NAME, schedule_interval='*/10 * * * *', default_args=default_args)
+dag = DAG(DAG_NAME,
+          schedule_interval='* * * * *',
+          backfill=False,
+          max_active_runs=1,
+          default_args=default_args
+         )
 
 run_this_1 = DummyOperator(task_id='run_this_1', dag=dag)
 run_this_2 = DummyOperator(task_id='run_this_2', dag=dag)
 run_this_2.set_upstream(run_this_1)
 run_this_3 = DummyOperator(task_id='run_this_3', dag=dag)
 run_this_3.set_upstream(run_this_2)
-
-

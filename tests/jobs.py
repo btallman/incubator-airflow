@@ -877,16 +877,25 @@ class SchedulerJobTest(unittest.TestCase):
                   default_args=default_args
                   )
 
-        default_backfill = configuration.get('scheduler', 'backfill_by_default')
+        default_backfill = configuration.getboolean('scheduler', 'backfill_by_default')
         # Test configs have backfill by default ON
+        if default_backfill == 'true':
+            default_backfill = True
+        elif default_backfill == 'false':
+            default_backfill = False
+
         self.assertEqual(default_backfill, True)
 
         # Correct default?
         self.assertEqual(dag.backfill, True)
 
         # Change the default to False and validate
-        configuration.set('scheduler', 'backfill_by_default', False)
-        default_backfill = configuration.get('scheduler', 'backfill_by_default')
+        configuration.set('scheduler', 'backfill_by_default', 'false')
+        default_backfill = configuration.getboolean('scheduler', 'backfill_by_default')
+        if default_backfill == 'true':
+            default_backfill = True
+        elif default_backfill == 'false':
+            default_backfill = False
 
         # Test configs have backfill by default OFF
         self.assertEqual(default_backfill, False)
@@ -898,7 +907,7 @@ class SchedulerJobTest(unittest.TestCase):
                   )
 
         # Put it back just because
-        configuration.set('scheduler', 'backfill_by_default', True)
+        configuration.set('scheduler', 'backfill_by_default', 'true')
 
         # Correct default?
         self.assertEqual(dag.backfill, default_backfill)

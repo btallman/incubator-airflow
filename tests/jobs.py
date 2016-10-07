@@ -931,4 +931,4 @@ class SchedulerJobTest(unittest.TestCase):
         self.assertGreater(dr.execution_date, now_minus_two_minutes)
 
         # The DR should be scheduled BEFORE now
-        self.assertLess(dr.execution_date, datetime.now())
+        self.assertLess(dr.execution_date, datetime.datetime.now())

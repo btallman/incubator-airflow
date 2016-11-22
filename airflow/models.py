@@ -1022,12 +1022,25 @@ class TaskInstance(Base):
     @provide_session
     def previous_ti(self, session=None):
         """ The task instance for the task that ran before this task instance """
-        return session.query(TaskInstance).filter(
-            TaskInstance.dag_id == self.dag_id,
-            TaskInstance.task_id == self.task.task_id,
-            TaskInstance.execution_date ==
-            self.task.dag.previous_schedule(self.execution_date),
-        ).first()
+        dag = self.task.dag
+
+        if dag.backfill:
+            return session.query(TaskInstance).filter(
+                TaskInstance.dag_id == self.dag_id,
+                TaskInstance.task_id == self.task.task_id,
+                TaskInstance.execution_date ==
+                self.task.dag.previous_schedule(self.execution_date),
+            ).first()
+
+        else:
+
+            dr = self.get_dagrun()
+            last_dagrun = dr.get_previous_dagrun() if dr else None
+
+            if last_dagrun:
+                return last_dagrun.get_task_instance(self.task_id)
+            else:
+                return None
 
     @provide_session
     def are_dependencies_met(
@@ -2532,6 +2545,8 @@ class DAG(BaseDag, LoggingMixin):
     :type sla_miss_callback: types.FunctionType
     :param orientation: Specify DAG orientation in graph view (LR, TB, RL, BT)
     :type orientation: string
+    :param backfill: Perform backfills (or only run latest)? Defaults to True
+    "type backfill: bool"
     """
 
     def __init__(
@@ -2548,6 +2563,7 @@ class DAG(BaseDag, LoggingMixin):
             dagrun_timeout=None,
             sla_miss_callback=None,
             orientation=configuration.get('webserver', 'dag_orientation'),
+            backfill=configuration.getboolean('scheduler', 'backfill_by_default'),
             params=None):
 
         self.user_defined_macros = user_defined_macros
@@ -2587,6 +2603,7 @@ class DAG(BaseDag, LoggingMixin):
         self.dagrun_timeout = dagrun_timeout
         self.sla_miss_callback = sla_miss_callback
         self.orientation = orientation
+        self.backfill = backfill
 
         self._comps = {
             'dag_id',
@@ -3787,6 +3804,17 @@ class DagRun(Base):
                                    .format(self))
 
         return self.dag
+
+    @provide_session
+    def get_previous_dagrun(self, session=None):
+        """The previous DagRun, if there is one"""
+
+        return session.query(DagRun).filter(
+            DagRun.dag_id == self.dag_id,
+            DagRun.execution_date < self.execution_date
+        ).order_by(
+            DagRun.execution_date.desc()
+        ).first()
 
     @provide_session
     def update_state(self, session=None):

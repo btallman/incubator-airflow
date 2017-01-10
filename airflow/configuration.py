@@ -275,6 +275,9 @@ log_fetch_timeout_sec = 5
 # By default, the webserver shows paused DAGs. Flip this to hide paused
 # DAGs by default
 hide_paused_dags_by_default = False
+# Show a limited number of execution runs in the drop-down on the graph view
+# for performance reasons
+max_executions_in_graph_view_drop_down = 200
 
 [email]
 email_backend = airflow.utils.email.send_email_smtp
@@ -475,6 +478,7 @@ web_server_port = 8080
 dag_orientation = LR
 log_fetch_timeout_sec = 5
 hide_paused_dags_by_default = False
+max_executions_in_graph_view_drop_down = 200
 
 [email]
 email_backend = airflow.utils.email.send_email_smtp

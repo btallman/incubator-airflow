@@ -263,6 +263,10 @@ authenticate = False
 # Filter the list of dags by owner name (requires authentication to be enabled)
 filter_by_owner = False
 
+# Show a limited number of execution runs in the drop-down on the graph view
+# for performance reasons
+max_executions_in_graph_view_drop_down = 200
+
 [email]
 email_backend = airflow.utils.email.send_email_smtp
 
@@ -396,6 +400,7 @@ default_owner = airflow
 base_url = http://localhost:8080
 web_server_host = 0.0.0.0
 web_server_port = 8080
+max_executions_in_graph_view_drop_down = 200
 
 [email]
 email_backend = airflow.utils.email.send_email_smtp

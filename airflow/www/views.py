@@ -1357,12 +1357,28 @@ class Airflow(BaseView):
             .filter_by(dag_id=dag_id)
             .order_by(desc(DR.execution_date)).all()
         )
+
+        max_drs = conf.getint('webserver','max_executions_in_graph_view_drop_down')
+        half_max_drs = int(max_drs/2)
+
         dr_choices = []
         dr_state = None
+
+        drs_after_current = 0
+
         for dr in drs:
             dr_choices.append((dr.execution_date.isoformat(), dr.run_id))
+            if dr_state:
+                drs_after_current += 1
+
             if dttm == dr.execution_date:
                 dr_state = dr.state
+
+            if len(dr_choices) >= max_drs and drs_after_current >= half_max_drs:
+                break
+
+        if len(dr_choices) > max_drs:
+            dr_choices = dr_choices[-max_drs]
 
         class GraphForm(Form):
             execution_date = SelectField("DAG run", choices=dr_choices)

@@ -1339,7 +1339,7 @@ class Airflow(BaseView):
             dr_choices = dr_choices[-max_drs:]
 
         if latest_run:
-            dr_choices.insert(0, (latest_run.execution_date.isoformat(), 'latest - {}'.format(latest_run.run_status)))
+            dr_choices.insert(0, (latest_run.execution_date.isoformat(), 'latest - {}'.format(latest_run.status)))
 
 
         class GraphForm(Form):

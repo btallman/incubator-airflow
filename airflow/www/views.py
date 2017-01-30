@@ -1390,14 +1390,15 @@ class Airflow(BaseView):
             dr_choices.insert(0, (latest_run.execution_date.isoformat(), 'latest - {}'.format(latest_run.run_status)))
 
 
-    class GraphForm(Form):
-        execution_date = SelectField("DAG run", choices=dr_choices)
-        arrange = SelectField("Layout", choices=(
+        class GraphForm(Form):
+            execution_date = SelectField("DAG run", choices=dr_choices)
+            arrange = SelectField("Layout", choices=(
                 ('LR', "Left->Right"),
                 ('RL', "Right->Left"),
                 ('TB', "Top->Bottom"),
                 ('BT', "Bottom->Top"),
             ))
+
         form = GraphForm(
             data={'execution_date': dttm.isoformat(), 'arrange': arrange})
 

@@ -1317,9 +1317,15 @@ class Airflow(BaseView):
         dr_state = None
 
         drs_after_current = 0
+        latest_run = None
 
         for dr in drs:
-            dr_choices.append((dr.execution_date.isoformat(), dr.run_id))
+            run_status = dr.state
+
+            if not latest_run:
+                latest_run = dr
+
+            dr_choices.append((dr.execution_date.isoformat(), '{} - {}'.format(dr.run_id, run_status)))
             if dr_state:
                 drs_after_current += 1
 
@@ -1330,9 +1336,13 @@ class Airflow(BaseView):
                 break
 
         if len(dr_choices) > max_drs:
-            dr_choices = dr_choices[-max_drs]
+            dr_choices = dr_choices[-max_drs:]
 
-        class GraphForm(Form):
+        if latest_run:
+            dr_choices.insert(0, (latest_run.execution_date.isoformat(), '{} - {}'.format(latest_run.run_status)))
+
+
+    class GraphForm(Form):
             execution_date = SelectField("DAG run", choices=dr_choices)
             arrange = SelectField("Layout", choices=(
                 ('LR', "Left->Right"),

@@ -106,6 +106,7 @@
 
                 <!-- Column 7: Last Run -->
                 <td class="text-nowrap latest_dag_run {{ dag.dag_id }}">
+                  {{ dag.get_last_dagrun(include_externally_triggered=True)}}
                 </td>
 
                 <!-- Column 8: Dag Runs -->
